@@ -1,255 +1,184 @@
-import './style.css';
-// import * as dat from 'lil-gui';
+import * as THREE from 'three';// 0.146.0 min
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import {makebg} from './scriptbg.js';
+import {lineMesh,tube,ring} from './lines.js'
 
-import * as THREE from 'three';
-import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
-import {
-  GPUComputationRenderer,
-} from 'three/examples/jsm/misc/GPUComputationRenderer.js';
-import {
-  DepthOfFieldEffect,
-  EffectComposer,
-  EffectPass,
-  RenderPass,
-  VignetteEffect,
-  GlitchEffect,
-  NoiseEffect,
-  BlendFunction,
-  ChromaticAberrationEffect,
-  ScanlineEffect,
-} from 'postprocessing';
-import Stats from 'stats.js';
-var stats = new Stats ();
-stats.showPanel (0); // 0: fps, 1: ms, 2: mb, 3+: custom
-document.getElementById ('instruction').appendChild (stats.dom);
+const background = makebg ();
+// var texture = new THREE.Texture (background);
+var texture = new THREE.TextureLoader().load( 'sunset.webp' );
 
-class Sizes extends THREE.EventDispatcher {
-  constructor () {
-    super ();
-    this.update ();
-    window.addEventListener ('resize', () => {
-      this.update ();
-    });
-  }
+// var pic = 'code.png'
+// const loader = new THREE.CubeTextureLoader();
+// loader.setPath( '' );
 
-  update () {
-    this.width = window.innerWidth;
-    this.height = window.innerHeight;
-    this.aspect = this.width / this.height;
-    this.pixelRatio = Math.min (window.devicePixelRatio, 2);
-    this.dispatchEvent ({type: 'resize', target: this});
-  }
-}
+//  texture = loader.load( [
+// 	pic, pic,pic,pic,pic,pic
+// ] );
 
-// Canvas
-const canvas = document.querySelector ('canvas.webgl');
+console.log(texture)
 
-// Sizes
-const sizes = new Sizes ();
+texture.mapping = 
 
-// Scene
-const scene = new THREE.Scene ();
+// THREE.UVMapping
+// THREE.CubeReflectionMapping
+// THREE.CubeRefractionMapping
+// THREE.EquirectangularReflectionMapping
+THREE.EquirectangularRefractionMapping
+// THREE.CubeUVReflectionMapping
 
-// Camera
-const camera = new THREE.PerspectiveCamera (45, sizes.aspect, 10, 3000);
-camera.position.set (-300, 80, -300).normalize ().multiplyScalar (320);
-scene.add (camera);
 
-// Controls
-const controls = new OrbitControls (camera, canvas);
+// texture.wrapS = THREE.RepeatWrapping;
+// texture.wrapT = THREE.RepeatWrapping;
+// texture.repeat.set( 4, 4 );
+// texture.magFilter=THREE.NearestFilter
+// // texture.anisotropy = 1
+texture.generateMipmaps=true
 
-controls.target.y = 60;
-const controlparams = {
-  maxDistance: 400,
-  minPolarAngle: 0.3,
-  maxPolarAngle: Math.PI / 2 - 0.1,
-  enablePan: false,
-  enableDamping: true,
-  autoRotate: true,
-};
 
-for (const [key, value] of Object.entries (controlparams)) {
-  controls[key] = value;
-}
+texture.needsUpdate = true;
 
-// Renderer
-const renderer = new THREE.WebGLRenderer ({
+const width = window.innerWidth;
+const height = window.innerHeight;
+
+console.error (THREE.REVISION,width, height);
+const canvas = document.querySelector ('canvas#loader');
+
+var renderer = new THREE.WebGLRenderer ({
   canvas: canvas,
-  powerPreference: 'high-performance',
-  antialias: false,
-  stencil: false,
-  depth: false,
+  antialias: true,
+  alpha: true,
 });
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.physicallyCorrectLights = true;
-renderer.outputEncoding = THREE.sRGBEncoding; // need for encoding
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.5;
-renderer.setSize (sizes.width, sizes.height);
-renderer.setPixelRatio (sizes.pixelRatio);
+renderer.setPixelRatio (window.devicePixelRatio > 1 ? 2 : 1);
+renderer.setSize (width, height);
+renderer.toneMapping = 
+THREE.CineonToneMapping//
+// THREE.ACESFilmicToneMapping;
+// renderer.toneMappingExposure = 1; 
+// renderer.outputEncoding = THREE.sRGBEncoding;
+//   renderer.setClearColor (0x000000, 0);
 
-// Composer
-const composer = new EffectComposer (renderer, {
-  multisampling: renderer.capabilities.isWebGL2 && sizes.pixelRatio === 1
-    ? 2
-    : undefined,
-});
+// Set CustomToneMapping to Uncharted2
+				// source: http://filmicworlds.com/blog/filmic-tonemapping-operators/
 
-// const depthOfFieldEffect = new DepthOfFieldEffect(camera, {
-//   focusDistance: 0.0,
-//   focalLength: .6048,
-//   bokehScale: 0.60,
-//   height: 480,
+				THREE.ShaderChunk.tonemapping_pars_fragment = THREE.ShaderChunk.tonemapping_pars_fragment.replace(
+					'vec3 CustomToneMapping( vec3 color ) { return color; }',
+					`#define Uncharted2Helper( x ) max( ( ( x * ( 0.15 * x + 0.10 * 0.50 ) + 0.20 * 0.02 ) / ( x * ( 0.15 * x + 0.50 ) + 0.20 * 0.30 ) ) - 0.02 / 0.30, vec3( 0.0 ) )
+					float toneMappingWhitePoint = 1.0;
+					vec3 CustomToneMapping( vec3 color ) {
+						color *= toneMappingExposure;
+						return saturate( Uncharted2Helper( color ) / Uncharted2Helper( vec3( toneMappingWhitePoint ) ) );
+					}`
+				);
+
+
+
+
+const camera = new THREE.PerspectiveCamera (
+  150,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  100
+);
+camera.position.set (5, 0, 0);
+
+const orbitControls = new OrbitControls(camera, renderer.domElement)
+orbitControls.enableDamping = true
+// orbitControls.autoRotate = true
+
+
+// const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(328, {
+//     generateMipmaps: true,
+//     minFilter: THREE.LinearMipmapLinearFilter,
 // })
+// const cubeCamera = new THREE.CubeCamera(.1, 20, cubeRenderTarget)
 
-const renderPass = new RenderPass (scene, camera);
-composer.addPass (renderPass);
 
-// const chromaticAberrationEffect = new ChromaticAberrationEffect();
 
-// const glitchEffect = new GlitchEffect({
-//   chromaticAberrationOffset: chromaticAberrationEffect.offset
-// });
-// const noiseEffect = new NoiseEffect({
-//   blendFunction: BlendFunction.COLOR_DODGE
-// });
 
-// noiseEffect.blendMode.opacity.value = 0.1;
-// const scanlineEffect = new ScanlineEffect({
-//   blendFunction: BlendFunction.MULTIPLY,
-//   // opacity:.325,
-//   density:0.75//.0001,
+const scene = new THREE.Scene ()
+// environment: texture,
+Object.entries({
+    background: texture,// background
+    environment:texture,//item
+//  mapping:   THREE.EquirectangularReflectionMapping
+}).forEach((e)=>scene[e[0]]=e[1])
 
-// // });
+scene.backgroundBlurriness = 1
+scene.needsUpdate = true
+ console.log(scene)
 
-// scanlineEffect.blendMode.opacity.value = 0.15;
-// noiseEffect.blendMode.opacity.value = 0.04;
 
-// console.log(scanlineEffect,noiseEffect)
 
-// const glitchPass = new EffectPass(camera, glitchEffect);//noiseEffect
-// const chromaticAberrationPass = new EffectPass(camera, chromaticAberrationEffect);
-// composer.addPass(glitchPass);
-// const depthOfFieldPass = new EffectPass(camera, depthOfFieldEffect)
-// composer.addPass(depthOfFieldPass);
+// const geometry = new THREE.BoxGeometry (10, 1, 1);
 
-// composer.addPass (new EffectPass (camera, scanlineEffect,noiseEffect,depthOfFieldEffect));// composer.addPass(chromaticAberrationPass);
+const geometry = new THREE.SphereGeometry(3)
+const material = new THREE.MeshStandardMaterial({
+    // envMap: cubeRenderTarget.texture,
+    // envMap:'none',
+    // color:new THREE.Color('black'),
+    emissive:new THREE.Color('red'),
+    emissiveIntensity:0.0,  
+    roughness: .0,
+  metalness:2,
+  opacity:1,
+transparent:  true,
+  side: THREE.DoubleSide
+})
 
-// composer.addPass (new EffectPass (camera, new VignetteEffect ()));
 
-// Floor
-const plane = new THREE.Mesh (
-  new THREE.PlaneGeometry (3000, 3000),
-  new THREE.MeshStandardMaterial ({
-    roughness: 1,
-    metalness: 0.7,
-  })
-);
-plane.rotation.x = -Math.PI / 2;
-plane.position.y = -40;
-plane.receiveShadow = true;
-scene.add (plane);
+const cube = new THREE.Mesh (geometry, material, {castShadow: true});
+// cube.add(cubeCamera)
+scene.add (cube);
 
-// Lights
-const directionalLight = new THREE.DirectionalLight ('#ffffff', 4);
-directionalLight.castShadow = true;
-directionalLight.shadow.mapSize.set (2048, 2048);
-var lights = {
-  near: 1,
-  far: 800,
-  left: -250,
-  right: 250,
-  top: 250,
-  bottom: -250,
-};
+camera.lookAt (cube.position);
 
-for (const [key, value] of Object.entries (lights)) {
-  directionalLight.shadow.camera[key] = value;
+
+scene.add(lineMesh())
+// scene.add(tube(material))
+// scene.add(ring(material))
+
+let segment = ring(material)
+segment.rotateY(Math.PI)
+scene.add(segment)
+
+
+// const light1 = new THREE.PointLight()
+// light1.position.set(10, 10, 10)
+// scene.add(light1)
+
+
+const light = new THREE.AmbientLight (0x404040); // soft white light
+scene.add (light);
+
+// renderer.render (scene, camera);
+background.style.filter = '';
+background.style.opacity = 0.1;
+background.remove()
+console.log (canvas);
+
+var clock = new THREE.Clock()
+function render () {
+  requestAnimationFrame (render);
+  // console.log("rendered");
+  const delta = clock.getDelta()
+    // scene.rotateZ(-3.2 * delta)
+
+    segment.rotateZ(3.*delta)
+    if (Math.random()>.7)
+    segment.position.z  = ((segment.position.z + 0.03)%4)
+    console.log(segment.position)
+
+    if (scene.backgroundBlurriness>.1){
+    scene.backgroundBlurriness -= 2e-3
+    // cube.material.opacity = scene.backgroundBlurriness - .01
+    cube.material.needsUpdate=true
+    scene.needsUpdate = true
+    }
+    // console.log(scene.backgroundBlurriness )
+
+  orbitControls.update()
+//   cubeCamera.update(renderer, scene)
+  renderer.render (scene, camera);
 }
 
-directionalLight.position.set (-3, 2, -0.35).normalize ().multiplyScalar (200);
-scene.add (directionalLight);
-
-const directionalLight2 = new THREE.DirectionalLight ('#ffffff', 4);
-directionalLight2.castShadow = true;
-directionalLight2.shadow.mapSize.set (2048, 2048);
-
-for (const [key, value] of Object.entries (lights)) {
-  directionalLight2.shadow.camera[key] = value;
-}
-
-directionalLight2.position.set (3, 2, 0.35).normalize ().multiplyScalar (200);
-scene.add (directionalLight2);
-
-// scene.add(new THREE.CameraHelper(directionalLight.shadow.camera))
-const ambientLight = new THREE.AmbientLight ('#ffffff', 0.915);
-scene.add (ambientLight);
-
-// Background colors
-const bgColorLinear = new THREE.Color ('#111').convertSRGBToLinear ();
-plane.material.color = bgColorLinear;
-renderer.setClearColor (bgColorLinear);
-scene.fog = new THREE.Fog (bgColorLinear, 500, 800);
-
-//////////////
-
-const fluro = ['ffbe0b', 'fb5607', 'ff006e', '8338ec', '3a86ff'].map (
-  d => '#' + d
-);
-
-const flashycool = ['002626', '0e4749', '95c623', 'e55812', 'efe7da'].map (
-  d => '#' + d
-);
-
-/////////////
-
-// Resizing
-sizes.addEventListener ('resize', () => {
-  camera.aspect = sizes.aspect;
-  camera.updateProjectionMatrix ();
-
-  renderer.setSize (sizes.width, sizes.height);
-  renderer.setPixelRatio (sizes.pixelRatio);
-
-  composer.setSize (sizes.width, sizes.height);
-});
-
-// Toggle animation
-let isAnimationActive = true;
-window.addEventListener ('keyup', event => {
-  if (event.key === ' ') {
-    isAnimationActive = !isAnimationActive;
-  }
-});
-
-// Animate
-let elapsed = 0;
-const clock = new THREE.Clock ();
-window.t = clock;
-
-const tick = () => {
-  stats.begin ();
-  // time since last call to getDelta
-  const deltaTime = clock.getDelta ();
-
-  // // GPU Compute
-  // if (isAnimationActive) {
-  //   particleset.forEach (p => p.update (deltaTime));
-  // }
-
-  // Add a bit of a vertical wave
-  const elapsed = clock.elapsedTime / 4;
-
-  // Update controls
-  controls.update ();
-  // Render
-  composer.render ();
-  stats.end ();
-
-  window.requestAnimationFrame (tick);
-};
-
-window.c = camera;
-
-tick ();
+render ();
