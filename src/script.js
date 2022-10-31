@@ -100,6 +100,7 @@ filelist.forEach (f => {
 
         lhs.add (mesh);
         lhs.position.set (...norm); //bbox.x,bbox.y,bbox.z)
+        mesh.material = clearmesh(THREE);
         return 0;
         break;
       case 'rhs':
@@ -110,14 +111,14 @@ filelist.forEach (f => {
         mesh.position.set (...norm.map (d => -d));
         rhs.add (mesh);
         rhs.position.set (...norm);
-
+        mesh.material = clearmesh(THREE);
         return 0;
         break;
       case 'helmetin':
         mesh.material = clearmesh (THREE);
         break;
       case 'body':
-        // mesh.material = white;
+        mesh.material = clearmesh(THREE);
       default:
       // code block
     }
@@ -127,6 +128,58 @@ filelist.forEach (f => {
       : head.add (mesh);
   });
 });
+
+
+loader.load ('MeetDan/outerbrain.stl', function (geometry) {
+    var material = normal; 
+    material.wireframe=true
+    var mesh = new THREE.Mesh (geometry, material, {
+      castShadow: true,
+      receiveShadow: true,
+    });
+    var s =0.05
+    // mesh.rotation.set(Math.PI/2,0,Math.PI*.75)
+    mesh.rotateZ(.5 *Math.PI)
+    mesh.position.y -=1
+    mesh.scale.set(s,s,s)
+    scene.add(mesh)
+
+    var material = clearmesh(THREE); 
+    material.wireframe=true
+    var mesh = new THREE.Mesh (geometry, material, {
+      castShadow: true,
+      receiveShadow: true,
+    });
+    var s =0.025
+
+    mesh.rotateX(-0.5*Math.PI)
+    mesh.position.y +=11
+    mesh.position.z -= 1
+    mesh.scale.set(s,s,s)
+    head.add(mesh)
+
+})
+
+
+
+loader.load ('MeetDan/innerbrain.stl', function (geometry) {
+    var material = normal; 
+    material.wireframe=true
+    var mesh = new THREE.Mesh (geometry, material, {
+      castShadow: true,
+      receiveShadow: true,
+    });
+    var s =0.025
+    // mesh.rotation.set(Math.PI/2,0,Math.PI*.75)
+    // mesh.rotateY(-0.5*Math.PI)
+    // mesh.rotateZ(0.5 *Math.PI)
+    mesh.rotateX(-0.5*Math.PI)
+    mesh.position.y +=11
+    mesh.position.z -= 1
+    mesh.scale.set(s,s,s)
+    head.add(mesh)
+})
+
 
 setTimeout (() => {
   model.add (lhs);
