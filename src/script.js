@@ -195,15 +195,9 @@ setTimeout (() => {
 
   addShadowedLight (10, 10, -40, 'white', 11, scene);
 
-  var shinywhite = white;
-  shinywhite.emissive = new THREE.Color ('white');
-  shinywhite.color = new THREE.Color ('white');
-  shinywhite.metalness = 0;
-  shinywhite.roughness = 1;
-  shinywhite.emissiveIntensity = 110;
 
   // updateMaterial(model,'outer',)
-  updateMaterial (model, 'helmetin', white);
+//   updateMaterial (model, 'helmetin', white);
 
 
 
@@ -253,7 +247,7 @@ var elapsed
 
 // ---------------- PARTICLES ----------------
 const tloader = new THREE.TextureLoader ();
-var particleTexture = tloader.load ('../Sprites/firefly.png');
+var particleTexture = tloader.load ('../sprites/firefly.png');
 var spriteMaterial = new THREE.SpriteMaterial ({
   map: particleTexture,
   transparent: true,
