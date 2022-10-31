@@ -239,7 +239,7 @@ window.h = head;
 
 /////////////////////////
 
-var objects_margin =width/ 1000;
+var objects_margin =Math.max(width,height)/ 1000;
 var nobj = 200/2;
 
  var span = nobj*objects_margin
