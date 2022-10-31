@@ -83,7 +83,7 @@ export function toneMapping (THREE, renderer,scene, background = 'sunset.webp') 
     //  mapping:   THREE.EquirectangularReflectionMapping
   }).forEach (e => (scene[e[0]] = e[1]));
 
-  scene.backgroundBlurriness = .1;
+  scene.backgroundBlurriness = .15;
   scene.needsUpdate = true;
 
   return texture
