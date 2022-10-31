@@ -19,7 +19,11 @@ export function get_renderer (
   });
   renderer.setPixelRatio (window.devicePixelRatio > 1 ? 2 : 1);
 
+
+
   renderer.setSize (canvas.width, canvas.height);
+  renderer.gammaInput = true;
+renderer.gammaOutput = true;
 
   const orbitControls = new OrbitControls (camera, renderer.domElement);
   orbitControls.enableDamping = true;
@@ -47,7 +51,14 @@ export function toneMapping (THREE, renderer,scene, background = 'sunset.webp') 
     THREE.EquirectangularRefractionMapping;
   // THREE.CubeUVReflectionMapping
 
-  renderer.toneMapping = THREE.CineonToneMapping;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.25;
+
+  //
+
+//   renderer.outputEncoding = THREE.sRGBEncoding;
+
+//   renderer.toneMapping = THREE.CineonToneMapping;
   // THREE.ACESFilmicToneMapping;
   // renderer.toneMappingExposure = 1;
   // renderer.outputEncoding = THREE.sRGBEncoding;
@@ -74,6 +85,8 @@ export function toneMapping (THREE, renderer,scene, background = 'sunset.webp') 
 
   scene.backgroundBlurriness = .1;
   scene.needsUpdate = true;
+
+  return texture
 }
 function onWindowResize (camera) {
     camera.aspect = window.innerWidth / window.innerHeight;

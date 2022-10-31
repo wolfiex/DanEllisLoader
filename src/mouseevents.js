@@ -15,8 +15,12 @@ var rotateY = Math.PI/window.innerHeight;
 export function onDocumentMouseMove( event ) {
 
 
-    mouseX = ( event.clientX - windowHalfX );
+    // mouseX = ( event.clientX - windowHalfX );
     mouseY = ( event.clientY - windowHalfY );
+    // rotated scene across x so have to flip
+
+    mouseX = window.innerWidth - ( event.clientX + windowHalfX );
+
 
     target.x += ( mouseX - target.x ) * .02;
     target.y += ( - mouseY - target.y ) * .02;
@@ -45,12 +49,17 @@ export function readjust (group){
     .getCenter( group.position )
     // .multiplyScalar( - 1 );
     
-    group.children.forEach(c=>
-        c.position.set( -bbox.x,-bbox.y,-bbox.z)
+    group.children.forEach(c=>{
+        // c.position.set( -bbox.x,-bbox.y,-bbox.z)
         // c.position.set( bbox.x,bbox.y,bbox.z)
-    )
+        c.position.x -= bbox.x;
+        c.position.y -= bbox.y;
+        c.position.z -= bbox.z;
+    }
+        )
 
     }
+    
 
 /*
 
